@@ -11,7 +11,7 @@ On every push to `main` or pull request, GitHub Actions:
 1. Pulls the estampo Docker image (OrcaSlicer + bambox bundled)
 2. Loads the STL, arranges parts on the build plate, slices with OrcaSlicer
 3. Repacks the output into a Bambu-compatible `.gcode.3mf`
-4. Shows slice metrics (print time, filament, layers) in the job summary
+4. Posts a PR comment with print metrics (time, filament, layers)
 5. Uploads the sliced output as a build artifact
 
 ## Files
@@ -32,27 +32,14 @@ On every push to `main` or pull request, GitHub Actions:
 ## The workflow
 
 ```yaml
-jobs:
-  slice:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Pull estampo image
-        run: docker pull "estampo/estampo:orca-2.3.1"
-
-      - name: Slice
-        run: |
-          docker run --rm \
-            -v "${{ github.workspace }}:/project" \
-            --workdir /project \
-            "estampo/estampo:orca-2.3.1" \
-            run estampo.toml \
-            --output-dir /project/estampo_output \
-            --local -v
+- name: Slice model
+  uses: estampo/estampo/action@main
+  with:
+    config: estampo.toml
+    comment: "true"
 ```
 
-The image contains OrcaSlicer, bambox, and estampo -- everything needed to go from STL to `.gcode.3mf` in one step.
+The action pulls the Docker image, runs the full pipeline, extracts metrics, and posts a PR comment. It also exposes outputs (`print-time`, `filament-grams`, `layer-count`, etc.) for downstream steps.
 
 ## The config
 
@@ -95,11 +82,12 @@ Or with Docker directly:
 
 ```bash
 docker run --rm -v "$PWD:/project" --workdir /project \
-  estampo/estampo:orca-2.3.1 \
+  ghcr.io/estampo/estampo:orca-2.3.1 \
   run estampo.toml --local -v
 ```
 
 ## Links
 
 - [estampo](https://github.com/estampo/estampo) -- the build system for reproducible 3D prints
+- [Action reference](https://github.com/estampo/estampo/blob/main/action/action.yml) -- all inputs and outputs
 - [Config docs](https://github.com/estampo/estampo/blob/main/docs/config.md) -- full TOML reference

@@ -5,46 +5,14 @@ on:
     branches: [main]
   pull_request:
 
-env:
-  ORCA_VERSION: "2.3.1"
-  CONFIG: estampo.toml
-  OUTPUT_DIR: estampo_output
-
 jobs:
   slice:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
 
-      - name: Pull estampo image
-        run: docker pull "estampo/estampo:orca-${ORCA_VERSION}"
-
-      - name: Slice
-        run: |
-          docker run --rm \
-            -v "${{ github.workspace }}:/project" \
-            --workdir /project \
-            "estampo/estampo:orca-${ORCA_VERSION}" \
-            run "${CONFIG}" \
-            --output-dir "/project/${OUTPUT_DIR}" \
-            --local -v
-
-          # Docker creates files as root — fix ownership
-          sudo chown -R "$(id -u):$(id -g)" "${OUTPUT_DIR}" 2>/dev/null || true
-
-      - name: Print metrics
-        run: |
-          STATS=$(find "${OUTPUT_DIR}" -name stats.json -type f | head -1)
-          if [ -n "$STATS" ]; then
-            echo "### Slice Results" >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo '```json' >> "$GITHUB_STEP_SUMMARY"
-            cat "$STATS" >> "$GITHUB_STEP_SUMMARY"
-            echo '```' >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v7
+      - name: Slice model
+        uses: estampo/estampo/action@main
         with:
-          name: sliced-output
-          path: ${{ env.OUTPUT_DIR }}/
+          config: estampo.toml
+          comment: "true"
