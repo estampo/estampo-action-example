@@ -23,7 +23,7 @@ wall_loops = "3"
 
 [[parts]]
 file = "cube_10mm.stl"
-copies = 2
+copies = 3
 
 [pack]
 command = "bambox repack {output_dir}/plate_sliced.gcode.3mf"
