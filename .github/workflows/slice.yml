@@ -1,0 +1,18 @@
+name: Slice
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  slice:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Slice model
+        uses: estampo/estampo/action@main
+        with:
+          config: estampo.toml
+          comment: "true"
